@@ -1,0 +1,27 @@
+name: e0-probe
+
+# E0-S2 spike: run the endpoint probe from a GitHub-hosted runner.
+# Manual trigger only; results go to the job summary.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Runner location
+        run: |
+          echo "## Runner" >> "$GITHUB_STEP_SUMMARY"
+          curl -s https://ipinfo.io/json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(f"- Region: {d.get(\"region\")}, {d.get(\"country\")} — org: {d.get(\"org\")}")' >> "$GITHUB_STEP_SUMMARY" || echo "- (ipinfo unavailable)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Probe endpoints
+        run: |
+          echo "## Probe results" >> "$GITHUB_STEP_SUMMARY"
+          python3 spikes/e0-s2/probe.py --markdown >> "$GITHUB_STEP_SUMMARY"
+          python3 spikes/e0-s2/probe.py
